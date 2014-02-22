@@ -1,0 +1,16 @@
+<div class="dots" ng-hide="loaded" style="position:absolute;left:50%;top:50%">
+    Loading data...
+</div>
+<div class="table-responsive" ng-show="loaded">
+  <h1>Basic Analysis - Total loan amount by country</h1>
+  <table id="loanAmount" class="table table-bordered">
+    <tr>
+      <th>Country</th>
+      <th>Total loan amount</th>
+    </tr>
+    <tr class="info" ng-repeat="row in rows">
+      <td>{{row._id}}</td>
+      <td>{{row.totalLoan}}</td>
+    </tr>
+  </table>
+</div>
