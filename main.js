@@ -27,7 +27,10 @@ app.get('/loansByCountry', function(req, res) {
     var kiva_collection = db.collection('kiva');
       
     kiva_collection.aggregate(
-        {$group: {_id:"$Country", totalLoan: {$sum: "$loan_amount"}}},
+        [
+          {$group: {_id:"$Country", loanCount: {$sum : 1}, totalLoan: {$sum: "$loan_amount"}, averageLoan: {$avg: "$loan_amount"}}},
+          {$sort: {totalLoan : -1}}
+        ],
         function(err,result){
           //console.log(result);
           res.json(result);
