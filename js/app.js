@@ -6,7 +6,8 @@ angular.module('myApp', [
   'myApp.controllers'
 ]).
 config(['$routeProvider', function($routeProvider) {
-  $routeProvider.when('/basics', {templateUrl: 'partials/basics.html', controller: 'BasicsController'});
-  $routeProvider.when('/visual', {templateUrl: 'partials/visual.html', controller: 'VisualController'});
-  $routeProvider.otherwise({redirectTo: '/basics'});
+  $routeProvider.when('/problem', {templateUrl: 'partials/problem.html', controller: 'ProblemController'});
+  $routeProvider.when('/tutorial', {templateUrl: 'partials/tutorial.html', controller: 'TutorialController'});
+  //$routeProvider.when('/visual', {templateUrl: 'partials/visual.html', controller: 'VisualController'});
+  $routeProvider.otherwise({redirectTo: '/problem'});
 }]);

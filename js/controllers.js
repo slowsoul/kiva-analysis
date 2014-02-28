@@ -1,9 +1,9 @@
 'use strict';
 
 angular.module('myApp.controllers', []).
-controller('BasicsController', ['$scope', '$http', function($scope, $http) {
+controller('TutorialController', ['$scope', '$http', function($scope, $http) {
 	$('#navbar').children('.active').removeClass('active');
-	$('#basics').addClass('active');
+	$('#tutorial').addClass('active');
   
   $scope.rows = [];
   $scope.loaded = false;
@@ -13,7 +13,7 @@ controller('BasicsController', ['$scope', '$http', function($scope, $http) {
       $scope.loaded = true;
   });
 }]).
-controller('VisualController', [function() {
+controller('ProblemController', [function() {
 	$('#navbar').children('.active').removeClass('active');
-	$('#visual').addClass('active');
+	$('#problem').addClass('active');
 }]);

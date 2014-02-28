@@ -1,0 +1,33 @@
+<div class="page-header">
+  <h1>Problem statement <small>Kiva loans</small></h1>
+</div>
+<div class="well well-lg">
+<h4>Kiva is a non-profit organization with a vision to connect people through lending to alleviate poverty. Leveraging the internet and a worldwide network of microfinance institutions, Kiva lets individuals help create opportunity around the world.</h4>
+<h4>Basically, a user of Kiva finds a loan, lends as little as $25 to help fund the loan which is vetted, administered and finally disbursed to borrowers by field partners of Kiva. Lenders will get updates about loans they have helped and get money back as the borrower repays the loan.</h4>
+</div>
+<div class="panel panel-primary">
+  <div class="panel-heading">Data source and possible analysis</div>
+  <div class="panel-body">
+    <p>Kiva created a set of API so that anyone can help expand the reach and create new features for the Kiva community. Data snapshots are also provided for uses such as analysis and visualization. The latest snapshot was generated on Feb 13, 2014. As for the loan part, there are 667497 records stored in 1335 json files. One standard json file have 500 records inside.</p>
+    Each record includes:
+      <ul>
+        <li>Borrower(s) information</li>
+        <li>Sector and description of planned usage</li>
+        <li>Loan amount and funded amount</li>
+        <li>Number of lenders</li>
+        <li>Repayment terms and schedule</li>
+        <li>Repayment records</li>
+        <li>Journals</li>
+      </ul>
+    With this large amount of data, we can find out:
+      <ul>
+        <li>Total loan amount and average loan amount for each country</li>
+        <li>Loan sector distribution for all and for each country</li>
+        <li>Average number of lenders contribute to a loan</li>
+        <li>Average number of borrowers in a loan</li>
+        <li>The status distribution for loans posted in each year</li>
+        <li>etc.</li>
+      </ul>
+  </div>
+</div>
+

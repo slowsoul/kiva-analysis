@@ -7,7 +7,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Sample Kiva Data Analysis</title>
+    <title>Data Analysis</title>
 
     <link rel="icon" type="img/ico" href="img/favicon.ico">
     <!-- Bootstrap core CSS -->
@@ -15,6 +15,7 @@
 
     <!-- Custom styles for this template -->
     <link rel="stylesheet" href="css/app.css"/>
+    <link rel="stylesheet" href="css/navbar-custom.css"/>
     <link rel="stylesheet" href="http://css-spinners.com/css/spinner/dots.css" type="text/css">
 
     <!-- Just for debugging purposes. Don't actually copy this line! -->
@@ -29,7 +30,7 @@
 
   <body>
 
-    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="navbar navbar-custom navbar-fixed-top" role="navigation">
       <div class="container" ng-cloak>
         <div class="navbar-header">
           <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -42,18 +43,14 @@
         </div>
         <div class="collapse navbar-collapse">
           <ul id="navbar" class="nav navbar-nav">
-            <li id="basics" class="active"><a href="#/basics">Basics</a></li>
-            <li id="visual"><a href="#/visual">Visualization</a></li>
+            <li id="problem" class="active"><a href="#/problem">Problem</a></li>
+            <li id="tutorial"><a href="#/tutorial">Tutorial</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
     </div>
 
     <div class="container">
-
-      <div class="starter-template">
-        <h1>Sample analysis result</h1>
-      </div>
       <div ng-view></div>
     </div><!-- /.container -->
 
