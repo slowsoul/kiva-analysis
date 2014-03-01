@@ -3,7 +3,8 @@ var express = require('express'),
     app = express(),
     MongoClient = require('mongodb').MongoClient,
     MONGO_PASSWORD = process.env.MONGO_PASSWORD || require('./credentials').MONGO_PASSWORD, 
-    connection_string = 'mongodb://admin:' + MONGO_PASSWORD + '@ds027699.mongolab.com:27699/is429-todo';
+    connection_string = 'mongodb://admin:' + MONGO_PASSWORD + '@ds027699.mongolab.com:27699/is429-todo',
+    collectionName = 'kiva-part';
  
 app.set('port', process.env.PORT || 3000);
 app.use(connect.compress());
@@ -22,17 +23,33 @@ app.get('/', function (req, res) {
 });
 
 app.get('/loansByCountry', function(req, res) {
-    // Todos returned as an array of todo objects
     MongoClient.connect(connection_string, function(err, db) {
-    var kiva_collection = db.collection('kiva');
+    var collection = db.collection(collectionName);
       
-    kiva_collection.aggregate(
+    collection.aggregate(
         [
-          {$group: {_id:"$Country", loanCount: {$sum : 1}, totalLoan: {$sum: "$loan_amount"}, averageLoan: {$avg: "$loan_amount"}}},
+          {$group: {_id:"$country", loanCount: {$sum : 1}, totalLoan: {$sum: "$loan_amount"}, averageLoan: {$avg: "$loan_amount"}}},
           {$sort: {totalLoan : -1}}
         ],
         function(err,result){
           //console.log(result);
+          res.json(result);
+          db.close();
+        });
+    });   
+});
+
+app.get('/loansBySector', function(req, res) {
+    MongoClient.connect(connection_string, function(err, db) {
+    var collection = db.collection(collectionName);
+      
+    collection.aggregate(
+        [
+          {$group: {_id:"$sector", loanCount: {$sum : 1}, totalLoan: {$sum: "$loan_amount"}, averageLoan: {$avg: "$loan_amount"}}},
+          {$sort: {totalLoan : -1}}
+        ],
+        function(err,result){
+          //console.log(JSON.stringify(result, null, 2));
           res.json(result);
           db.close();
         });

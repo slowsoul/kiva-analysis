@@ -3,7 +3,9 @@
 // Declare app level module which depends on filters, and services
 angular.module('myApp', [
   'ngRoute',
-  'myApp.controllers'
+  'myApp.controllers',
+  'myApp.directives',
+  'ui.bootstrap'
 ]).
 config(['$routeProvider', function($routeProvider) {
   $routeProvider.when('/problem', {templateUrl: 'partials/problem.html', controller: 'ProblemController'});

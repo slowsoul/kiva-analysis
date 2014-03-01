@@ -1,3 +1,142 @@
+<br/>
+<div class="well">
+  <p>This tutorial talks about using MongoDB to import the original data and carry out data analysis.</p>
+  MongoDB is selected because:
+  <ul>
+    <li>It's easy to use</li>
+    <li>There are MongoDB-as-a-services provided, MongoLab is used here</li>
+    <li>It has a powerful aggregation pipeline to tackle the data problems we're interested in</li>
+    <li>The query result is in JSON format which is easy to handle and display</li>
+  </ul>
+  Here, Node.js is used to interact with MongoDB because:
+  <ul>
+    <li>It is easy to deal with JSON objects and strings</li>
+    <li>MongoDB driver support</li>
+  </ul> 
+</div>
+<h3>Step <span class="label label-primary">1</span> Create MongoDB database and connect to it</h3>
+<p>Sign up for MongoLab and create a new database, then create a new collection in the database, make a note of the database URI, username, password and collection name once done.</p>
+<p>Use <code class="info">npm install mongodb</code> to install MongoDB driver for Node.js. After that, you simply need a connection string to connect to the database, as shown in the code snippet below:</p>
+<pre class="prettyprint lang-js">
+  var MongoClient = require('mongodb').MongoClient,
+  connection_string = 'mongodb://&lt;username&gt;:&lt;password&gt;@&lt;database URI&gt;';
+  var collection;
+  MongoClient.connect(connection_string, function(err, db) {
+    collection = db.collection('&lt;collection-name&gt;');
+  
+    //database operations here
+
+  });
+</pre>
+<br/>
+<h3>Step <span class="label label-primary">2</span> Import data</h3>
+<p>Since the original data is distributed in many small json files, we need to first organize them into a single object. Also, part of the loan data such as repayment terms, schedules, records and journals will not be used in current analysis. Thus, we will extract data of interest and insert them into our MongoDB collection. The data format can be found at <a href="http://build.kiva.org/docs/data/loans">http://build.kiva.org/docs/data/loans</a></p>
+<pre class="prettyprint lang-js">
+  var fs = require('fs'),
+  MongoClient = require('mongodb').MongoClient,
+  connection_string = 'mongodb://&lt;username&gt;:&lt;password&gt;@&lt;database URI&gt;';
+  var collection;
+  MongoClient.connect(connection_string, function(err, db) {
+    collection = db.collection('&lt;collection-name&gt;');
+  
+    console.log("insert begins");
+	
+    var docArray;
+    for(var j=1;j&lt;=1335;j++){
+      file = __dirname + '/' + j + '.json';
+  
+      //use synchronous file read method here since we are in a loop
+      data = fs.readFileSync(file, 'utf8');
+      data = JSON.parse(data);
+
+      //every file contains a 'header' object and a 'loans' object, the 'header' object describes snapshot date and number of records. We use the loans object only.
+      loans = data.loans;
+      
+      docArray = []
+
+      //get an array of loan objects in one file
+      for(var i=0;i&lt;loans.length;i++){
+        docArray.push({
+          country: loans[i].location.country,
+          loan_amount: loans[i].loan_amount,
+          sector: loans[i].sector,
+          lender_count: loans[i].lender_count,
+          borrower_count: loans[i].borrowers.length,
+          status: loans[i].status,
+          posted_date: loans[i].posted_date
+        });
+      }
+      
+      //insert the array to collection
+      kiva_collection.insert(
+        docArray,{safe:true},function(err, doc){
+          if(err != null){
+            console.log(err);
+          }
+        }
+      );  
+    }
+  
+    console.log("insert ended");
+  
+  });
+</pre>
+<br/>
+<h3>Step <span class="label label-primary">3</span> Analyze the data</h3>
+<p>For this part, we will use the first 500 json files as a training dataset(just change 1335 to 500 when importing the data), and use the MongoDB aggregation pipeline to tackle the proposed analysis problems. Several example analysis tasks and corresponding solutions will be provided to give you a better understanding of MongoDB aggregation pipeline usage.</p>
+<div class="panel panel-primary">
+  <div class="panel-heading">MongoDB aggregation pipeline</div>
+  <div class="panel-body">
+    <p>The MongoDB aggregation pipeline starts with the documents of a collection and streams the documents from one pipeline operator to the next to process the documents. Each operator in the pipeline transforms the documents as they pass through the pipeline. Pipeline operators do not need to produce one output document for every input document. Operators may generate new documents or filter out documents. Pipeline operators can be repeated in the pipeline.</p>
+    <p>Available pipeline operators include $project, $match, $limit, $skip, $unwind, $group, $sort, $geoNear. Here, we'll use ... and the meaning of them will be explained in sample problems below.</p>
+  </div>
+</div>
+<div class="well well-sm">
+  <p><b>Problem 1</b>: Loan sector distribution for all loans and for loans in one specified country</p>
+  <p>The goal is to find out how many loans are there in each sector in general and how much the total and average loan amount is in each sector. We can also focus on one specifed country to get the sector distribution. Uganda will be selected in this example.</p>
+</div>
+<tabset>
+<tab heading="Code">
+  <pre class="prettyprint lang-js">
+  collection.aggregate(
+    [
+      {$group: {_id:"$sector", loanCount: {$sum : 1}, totalLoan: {$sum: "$loan_amount"}, averageLoan: {$avg: "$loan_amount"}}},
+      {$sort: {totalLoan : -1}}
+    ],
+    function(err,result){
+      console.log(JSON.stringify(result, null, 2));
+      db.close();
+    });
+  });
+  </pre>
+</tab>
+<tab heading="Result" select="showP1res()">
+  <div class="panel panel-default">
+    <div class="panel-body" style="text-align:center">
+      <div class="dots" ng-hide="p1loaded" style="margin:40px 0;display:inline-block">
+          Loading
+      </div>
+      <div class="table-responsive" ng-show="p1loaded">
+        <table id="loanAmount" class="table table-bordered">
+          <tr>
+            <th>Sector</th>
+            <th>Loan count</th>
+            <th>Total loan amount</th>
+            <th>Average loan amount(Rounded to 2 decimal places)</th>
+          </tr>
+          <tr class="info" ng-repeat="row in p1res">
+            <td>{{row._id}}</td>
+            <td>{{row.loanCount}}</td>
+            <td>{{row.totalLoan}}</td>
+            <td>{{row.averageLoan.toFixed(2)}}
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</tab>
+</tabset>
+<!--
 <div class="dots" ng-hide="loaded" style="position:absolute;left:50%;top:50%">
     Loading
 </div>
@@ -18,3 +157,4 @@
     </tr>
   </table>
 </div>
+-->
