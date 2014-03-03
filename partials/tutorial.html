@@ -16,7 +16,7 @@
 </div>
 <h3>Step <span class="label label-primary">1</span> Create MongoDB database and connect to it</h3>
 <p>Sign up for MongoLab and create a new database, then create a new collection in the database, make a note of the database URI, username, password and collection name once done.</p>
-<p>Use <code class="info">npm install mongodb</code> to install MongoDB driver for Node.js. After that, you simply need a connection string to connect to the database, as shown in the code snippet below:</p>
+<p>After Node.js is installed on your system, use <code class="info">npm install mongodb</code> to install MongoDB driver for Node.js. After that, you simply need a connection string to connect to the database, as shown in the code snippet below:</p>
 <pre class="prettyprint lang-js">
   var MongoClient = require('mongodb').MongoClient,
   connection_string = 'mongodb://&lt;username&gt;:&lt;password&gt;@&lt;database URI&gt;';
@@ -30,7 +30,7 @@
 </pre>
 <br/>
 <h3>Step <span class="label label-primary">2</span> Import data</h3>
-<p>Since the original data is distributed in many small json files, we need to first organize them into a single object. Also, part of the loan data such as repayment terms, schedules, records and journals will not be used in current analysis. Thus, we will extract data of interest and insert them into our MongoDB collection. The data format can be found at <a href="http://build.kiva.org/docs/data/loans">http://build.kiva.org/docs/data/loans</a></p>
+<p>Since the original data is distributed in many small json files, we need to first organize them into a single object. Also, part of the loan data such as repayment terms, schedules, records and journals will not be used in current analysis. Thus, we will extract data of interest and insert them into our MongoDB collection. The data format can be found at <a href="http://build.kiva.org/docs/data/loans">http://build.kiva.org/docs/data/loans. The data we selected here includes country, loan amount, loan sector, number of borrower(s), number of lender(s), loan status, post date of loan.</a></p>
 <pre class="prettyprint lang-js">
   var fs = require('fs'),
   MongoClient = require('mongodb').MongoClient,
@@ -54,7 +54,7 @@
       
       docArray = []
 
-      //get an array of loan objects in one file
+      //get an array of loan objects in one file. Note that posted_date is wrapped in a Date Object to be stored as a ISODate type data in the database, which will facilitate operations related to date.
       for(var i=0;i&lt;loans.length;i++){
         docArray.push({
           country: loans[i].location.country,
@@ -63,7 +63,7 @@
           lender_count: loans[i].lender_count,
           borrower_count: loans[i].borrowers.length,
           status: loans[i].status,
-          posted_date: loans[i].posted_date
+          posted_date: new Date(loans[i].posted_date)
         });
       }
       
@@ -93,7 +93,7 @@
 </div>
 <div class="well well-sm">
   <p><b>Problem 1</b>: Loan sector distribution for all loans and for loans in one specified country</p>
-  <p>The goal is to find out how many loans are there in each sector in general and how much the total and average loan amount is in each sector. We can also focus on one specifed country to get the sector distribution. Uganda will be selected in this example.</p>
+  <p>The goal is to find out how many loans are there in each sector in general and how much the total and average loan amount is in each sector. We can also focus on one specifed country to get the sector distribution. <b>Uganda</b> will be selected in this example.</p>
 </div>
 <p>For the first part, we will use <b>$group</b> and <b>$sort</b> operators</p>
 <p><b>$group</b> groups documents together for the purpose of calculating aggregate values based on a collection of documents. It is similar to <b>GROUP BY</b> in relational databases. To define a group, <b>_id</b> will be used, a single field or multiple fields from the documents, as well as other valid expressions can be specified as identifier with <b>_id</b>. After that, you can use various accumulators for certain remaining fields to calculate aggregated values.</p>
@@ -102,18 +102,17 @@
 <tabset>
 <tab heading="Code">
   <pre class="prettyprint lang-js">
-  //1)Group documents by sector field by providing $sector as _id. In one group, every document contributes one to the loanCount, totalLoan and averageLoan are the result of corresponding accumulators on 'loan_amount' field. Note a $ symbol before field name is needed here as suggested by the documentation.
-  //2)Sort by number of loans in each sector in descending order
+  //1)Group documents by sector field by providing $sector as _id. In one group, every document contributes one to the loan_count, total_loan and average_loan are the result of corresponding accumulators on 'loan_amount' field. Note a $ symbol before field name is needed here as suggested by the documentation.
+  //2)Sort by number of loans in each sector in descending order, namely the 'loan_count' field
   collection.aggregate(
     [
-      {$group: {_id:"$sector", loanCount: {$sum : 1}, totalLoan: {$sum: "$loan_amount"}, averageLoan: {$avg: "$loan_amount"}}},
-      {$sort: {loanCount : -1}}
+      {$group: {_id:"$sector", loan_count: {$sum : 1}, total_loan: {$sum: "$loan_amount"}, average_loan: {$avg: "$loan_amount"}}},
+      {$sort: {loan_count : -1}}
     ],
     function(err,result){
       console.log(JSON.stringify(result, null, 2));
       db.close();
     });
-  });
   </pre>
 </tab>
 <tab heading="Result" select="showP1ares()">
@@ -132,9 +131,9 @@
           </tr>
           <tr class="info" ng-repeat="row in p1ares">
             <td>{{row._id}}</td>
-            <td>{{row.loanCount}}</td>
-            <td>{{row.totalLoan}}</td>
-            <td>{{row.averageLoan.toFixed(2)}}</td>
+            <td>{{row.loan_count}}</td>
+            <td>{{row.total_loan}}</td>
+            <td>{{row.average_loan.toFixed(2)}}</td>
           </tr>
         </table>
       </div>
@@ -150,19 +149,17 @@
 <tab heading="Code">
   <pre class="prettyprint lang-js">
   //1)Filter the documents to get only documents of loans in Uganda
-  //2)Group documents by sector field by providing $sector as _id. In one group, every document contributes one to the loanCount, totalLoan and averageLoan are the result of corresponding accumulators on 'loan_amount' field. Note a $ symbol before field name is needed here as suggested by the documentation.
-  //3)Sort by number of loans in each sector in descending order
+  //2)group and sort operations are same as those in part one of problem 1
   collection.aggregate(
     [
       {$match: {country : "Uganda"}},
-      {$group: {_id:"$sector", loanCount: {$sum : 1}, totalLoan: {$sum: "$loan_amount"}, averageLoan: {$avg: "$loan_amount"}}},
-      {$sort: {loanCount : -1}}
+      {$group: {_id:"$sector", loan_count: {$sum : 1}, total_loan: {$sum: "$loan_amount"}, average_loan: {$avg: "$loan_amount"}}},
+      {$sort: {loan_count : -1}}
     ],
     function(err,result){
       console.log(JSON.stringify(result, null, 2));
       db.close();
     });
-  });
   </pre>
 </tab>
 <tab heading="Result" select="showP1bres()">
@@ -181,9 +178,9 @@
           </tr>
           <tr class="info" ng-repeat="row in p1bres">
             <td>{{row._id}}</td>
-            <td>{{row.loanCount}}</td>
-            <td>{{row.totalLoan}}</td>
-            <td>{{row.averageLoan.toFixed(2)}}</td>
+            <td>{{row.loan_count}}</td>
+            <td>{{row.total_loan}}</td>
+            <td>{{row.average_loan.toFixed(2)}}</td>
           </tr>
         </table>
       </div>
@@ -196,24 +193,30 @@
   <p><b>Problem 2</b>: Average number of borrowers and lenders for loans in each year</p>
   <p>The goal is to find out the change in number of borrowers and lenders for loans over the years. With these data, we can analyze the trend in the time domain.</p>
 </div>
-<p>For this problem, </p>
+<p>For this problem, we will use one new operator called <b>$project</b> to get a new field representing the year when each loan is posted.</p>
+<p><b>$project</b> reshapes a document stream by renaming, adding, or removing fields. It can also be used to create computed values or sub-documents. Here, we will use $year operator, which can convert a ISODate Object to corresponding year, to get the year in 'posted_date' field to a new 'post_year' field.</p>
+<p>Note that loans with status being 'deleted' or '' has a <b>null</b> 'posted_date' field in original json file, which results in a default ISODate object with value Jan 1st, 1970 in database, so we will filter out them using <b>$match</b> first</p>
+<p>Check out the code below, the <b>Result</b> tab contains result arranged in a table which is the realtime query result from the 500-file collection.</p>
 <tabset>
 <tab heading="Code">
   <pre class="prettyprint lang-js">
-  //1)Filter the documents to get only documents of loans in Uganda
-  //2)Group documents by sector field by providing $sector as _id. In one group, every document contributes one to the loanCount, totalLoan and averageLoan are the result of corresponding accumulators on 'loan_amount' field. Note a $ symbol before field name is needed here as suggested by the documentation.
-  //3)Sort by number of loans in each sector in descending order
+  //1)Filter the documents to get only valid documents, of which the 'posted_date' field is not null
+  //2)Project the year value of 'posted_date' field to a new field called 'post_year', also include fields that will be used in next pipeline stage, namely 'borrower_count' and 'lender_count'. '_id' field which is MongoDB generated identifier for document is excluded here.
+  //3)Group documents by projected 'post_year' field by providing $post_year as _id. avg_borrower and avg_lender are the result of average accumulator on 'borrower_count' and 'lender_count' fields.
+  //4)Sort by post year in ascending order
+  var start = new Date(1970, 1, 1);
   collection.aggregate(
     [
-      {$match: {country : "Uganda"}},
-      {$group: {_id:"$sector", loanCount: {$sum : 1}, totalLoan: {$sum: "$loan_amount"}, averageLoan: {$avg: "$loan_amount"}}},
-      {$sort: {loanCount : -1}}
+      {$match: {posted_date: {$gt: start}}},
+      {$project: {post_year: {$year: "$posted_date"}, borrower_count: 1, lender_count: 1, _id: 0}},
+      {$group: {_id: "$post_year", avg_borrower: {$avg: "$borrower_count"}, avg_lender: {$avg: "$lender_count"}}},
+      {$sort: {_id : 1}}
     ],
     function(err,result){
-      console.log(JSON.stringify(result, null, 2));
+      //console.log(JSON.stringify(result, null, 2));
+      res.json(result);
       db.close();
     });
-  });
   </pre>
 </tab>
 <tab heading="Result" select="showP2res()">
@@ -226,13 +229,13 @@
         <table id="loanAmount" class="table table-bordered">
           <tr>
             <th>Year</th>
-            <th>Average number of borrower</th>
-            <th>Average number of lender</th>
+            <th>Average number of borrower(Rounded to 2 decimal places)</th>
+            <th>Average number of lender(Rounded to 2 decimal places)</th>
           </tr>
           <tr class="info" ng-repeat="row in p2res">
             <td>{{row._id}}</td>
-            <td>{{row.avgBorrower}}</td>
-            <td>{{row.avgLender}}</td>
+            <td>{{row.avg_borrower.toFixed(2)}}</td>
+            <td>{{row.avg_lender.toFixed(2)}}</td>
           </tr>
         </table>
       </div>
@@ -240,3 +243,16 @@
   </div>
 </tab>
 </tabset>
+<br/>
+<h3>Step <span class="label label-primary">4</span> Try out</h3>
+<p>Try out what you have learned on some exercises! This time you should use the full dataset, namely all of the 1335 json files</p>
+<div class="well well-sm">
+  <p><b>Exercise 1</b>: Country distribution for all loans and for loans in one specified sector</p>
+  <p>The goal is to find out how many loans are there in each country in general and how much the total and average loan amount is in each country. We can also focus on one specifed sector to get the country distribution, use <b>Construction</b> Sector in this exercise.</p>
+</div>
+<div class="well well-sm">
+  <p><b>Exercise 2</b>: Current paid percentage of loans for loans posted in each year starting from 2011</p>
+  <p>The goal is to find out what percentage of loans are in 'paid' status now for loans posted in each year starting from 2011.</p>
+  <p><b>Hint:</b> All of the four pipeline operators mentioned in step 3 are needed in this exercise. Also, take a look at <b>$cond</b> and <b>$divide</b>, two <a href="http://docs.mongodb.org/manual/reference/operator/aggregation/#aggregation-expression-operators">expression operators</a>, which may help you solve this one.</p>
+</div>
+<br/>

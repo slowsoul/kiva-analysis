@@ -45,8 +45,8 @@ app.get('/loansBySector', function(req, res) {
       
     collection.aggregate(
         [
-          {$group: {_id:"$sector", loanCount: {$sum : 1}, totalLoan: {$sum: "$loan_amount"}, averageLoan: {$avg: "$loan_amount"}}},
-          {$sort: {loanCount : -1}}
+          {$group: {_id:"$sector", loan_count: {$sum : 1}, total_loan: {$sum: "$loan_amount"}, average_loan: {$avg: "$loan_amount"}}},
+          {$sort: {loan_count : -1}}
         ],
         function(err,result){
           //console.log(JSON.stringify(result, null, 2));
@@ -63,8 +63,8 @@ app.get('/loansBySectorUganda', function(req, res) {
     collection.aggregate(
         [
           {$match: {country : "Uganda"}},
-          {$group: {_id:"$sector", loanCount: {$sum : 1}, totalLoan: {$sum: "$loan_amount"}, averageLoan: {$avg: "$loan_amount"}}},
-          {$sort: {loanCount : -1}}
+          {$group: {_id:"$sector", loan_count: {$sum : 1}, total_loan: {$sum: "$loan_amount"}, average_loan: {$avg: "$loan_amount"}}},
+          {$sort: {loan_count: -1}}
         ],
         function(err,result){
           //console.log(JSON.stringify(result, null, 2));
@@ -78,15 +78,31 @@ app.get('/borrowerLender', function(req, res) {
     MongoClient.connect(connection_string, function(err, db) {
     var collection = db.collection(collectionName);
     var start = new Date(1970, 1, 1);
-      /*
-      {$project: {postYear: {$year: "$posted_date"}, borrower_count : 1, lender_count : 1, _id : 0}},
-          {$group: {_id: "$postYear", avgBorrower: {$avg: "$borrower_count"}, avgLender: {$avg: "$lender_count"}}},
-          {$sort: {_id : 1}}*/
     collection.aggregate(
         [
           {$match: {posted_date: {$gt: start}}},
-          {$project: {postYear: {$year: "$posted_date"}, borrower_count : 1, lender_count : 1, _id : 0}},
-          {$group: {_id: "$postYear", avgBorrower: {$avg: "$borrower_count"}, avgLender: {$avg: "$lender_count"}}},
+          {$project: {post_year: {$year: "$posted_date"}, borrower_count: 1, lender_count: 1, _id: 0}},
+          {$group: {_id: "$post_year", avg_borrower: {$avg: "$borrower_count"}, avg_lender: {$avg: "$lender_count"}}},
+          {$sort: {_id : 1}}
+        ],
+        function(err,result){
+          //console.log(JSON.stringify(result, null, 2));
+          res.json(result);
+          db.close();
+        });
+    });   
+});
+
+app.get('/paidPercent', function(req, res) {
+    MongoClient.connect(connection_string, function(err, db) {
+    var collection = db.collection(collectionName);
+    var start = new Date(1970, 1, 1), end = new Date(2009, 1, 1);
+    collection.aggregate(
+        [
+          {$match: {posted_date: {$gt: start, $lt: end}}},
+          {$project: {post_year: {$year: "$posted_date"}, status: 1, _id: 0}},
+          {$group: {_id: "$post_year", paid_loan_count: {$sum: { $cond: [ { $eq: [ "$status", "paid" ] } , 1, 0 ] }}, loan_count: {$sum: 1}}},
+          {$project: {_id: 1, paid_percentage: {$divide: ["$paid_loan_count", "$loan_count"]}}},
           {$sort: {_id : 1}}
         ],
         function(err,result){

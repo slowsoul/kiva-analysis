@@ -31,10 +31,10 @@
 
   <body>
 
-    <div class="navbar navbar-custom navbar-fixed-top" role="navigation">
+    <div class="navbar navbar-custom navbar-fixed-top" role="navigation" ng-controller="NavBarCtrl">
       <div class="container" ng-cloak>
         <div class="navbar-header">
-          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" ng-click="isCollapsed = !isCollapsed">
             <span class="sr-only">Toggle navigation</span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
@@ -42,7 +42,7 @@
           </button>
           <a class="navbar-brand" href="#">Kiva</a>
         </div>
-        <div class="collapse navbar-collapse">
+        <div class="collapse navbar-collapse" collapse="isCollapsed">
           <ul id="navbar" class="nav navbar-nav">
             <li id="problem" class="active"><a href="#/problem">Problem</a></li>
             <li id="tutorial"><a href="#/tutorial">Tutorial</a></li>
@@ -66,5 +66,10 @@
     <script src="js/app.js"></script>
     <script src="js/controllers.js"></script>
     <script src="js/directives.js"></script>
+    <script>
+      function NavBarCtrl($scope) {
+        $scope.isCollapsed = true;
+      }
+    </script>
   </body>
 </html>
