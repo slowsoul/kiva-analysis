@@ -5,11 +5,22 @@ angular.module('myApp', [
   'ngRoute',
   'myApp.controllers',
   'myApp.directives',
-  'ui.bootstrap'
+  'ui.bootstrap',
+  'ngScrollSpy'
 ]).
 config(['$routeProvider', function($routeProvider) {
   $routeProvider.when('/problem', {templateUrl: 'partials/problem.html', controller: 'ProblemController'});
   $routeProvider.when('/tutorial', {templateUrl: 'partials/tutorial.html', controller: 'TutorialController'});
-  //$routeProvider.when('/visual', {templateUrl: 'partials/visual.html', controller: 'VisualController'});
   $routeProvider.otherwise({redirectTo: '/problem'});
 }]);
+
+function NavBarCtrl($scope) {
+  $scope.isCollapsed = true;
+}
+
+function MainCtrl($scope, $location, $anchorScroll, $routeParams) {
+  $scope.scrollTo = function(id) {
+    $location.hash(id);
+    $anchorScroll();
+  };
+}

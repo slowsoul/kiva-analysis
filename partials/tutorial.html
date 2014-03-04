@@ -1,4 +1,5 @@
 <br/>
+<div class="col-md-9" role="main">
 <div class="well">
   <p>This tutorial talks about using MongoDB to import the original data and carry out data analysis.</p>
   MongoDB is selected because:
@@ -14,6 +15,7 @@
     <li>MongoDB driver support</li>
   </ul> 
 </div>
+<section id="step1" scrollspyBroadcast>
 <h3>Step <span class="label label-primary">1</span> Create MongoDB database and connect to it</h3>
 <p>Sign up for MongoLab and create a new database, then create a new collection in the database, make a note of the database URI, username, password and collection name once done.</p>
 <p>After Node.js is installed on your system, use <code class="info">npm install mongodb</code> to install MongoDB driver for Node.js. After that, you simply need a connection string to connect to the database, as shown in the code snippet below:</p>
@@ -28,9 +30,11 @@
 
   });
 </pre>
+</section>
 <br/>
+<section id="step2" scrollspyBroadcast>
 <h3>Step <span class="label label-primary">2</span> Import data</h3>
-<p>Since the original data is distributed in many small json files, we need to first organize them into a single object. Also, part of the loan data such as repayment terms, schedules, records and journals will not be used in current analysis. Thus, we will extract data of interest and insert them into our MongoDB collection. The data format can be found at <a href="http://build.kiva.org/docs/data/loans">http://build.kiva.org/docs/data/loans. The data we selected here includes country, loan amount, loan sector, number of borrower(s), number of lender(s), loan status, post date of loan.</a></p>
+  <p>Since the original data is distributed in many small json files, we need to first organize them into a single object. Also, part of the loan data such as repayment terms, schedules, records and journals will not be used in current analysis. Thus, we will extract data of interest and insert them into our MongoDB collection. The data format can be found <a href="http://build.kiva.org/docs/data/loans">here</a>. The data we selected here includes country, loan amount, loan sector, number of borrower(s), number of lender(s), loan status and post date of loan.</p>
 <pre class="prettyprint lang-js">
   var fs = require('fs'),
   MongoClient = require('mongodb').MongoClient,
@@ -81,14 +85,16 @@
   
   });
 </pre>
+</section>
 <br/>
+<section id="step3" scrollspyBroadcast>
 <h3>Step <span class="label label-primary">3</span> Analyze the data</h3>
 <p>For this part, we will use the first 500 json files as a training dataset(just change 1335 to 500 when importing the data), and use the MongoDB aggregation pipeline to tackle the proposed analysis problems. Several example analysis tasks and corresponding solutions will be provided to give you a better understanding of MongoDB aggregation pipeline usage.</p>
 <div class="panel panel-primary">
   <div class="panel-heading">MongoDB aggregation pipeline</div>
   <div class="panel-body">
     <p>The MongoDB aggregation pipeline starts with the documents of a collection and streams the documents from one pipeline operator to the next to process the documents. Each operator in the pipeline transforms the documents as they pass through the pipeline. Pipeline operators do not need to produce one output document for every input document. Operators may generate new documents or filter out documents. Pipeline operators can be repeated in the pipeline.</p>
-    <p>Available pipeline operators include $project, $match, $limit, $skip, $unwind, $group, $sort, $geoNear. Here, we'll use some basic operators and the meaning of them will be explained in sample problems below.</p>
+    <p>Available pipeline operators include $project, $match, $limit, $skip, $unwind, $group, $sort, $geoNear. Here, we'll use some basic operators and the meaning of them will be explained in example problems below.</p>
   </div>
 </div>
 <div class="well well-sm">
@@ -98,7 +104,7 @@
 <p>For the first part, we will use <b>$group</b> and <b>$sort</b> operators</p>
 <p><b>$group</b> groups documents together for the purpose of calculating aggregate values based on a collection of documents. It is similar to <b>GROUP BY</b> in relational databases. To define a group, <b>_id</b> will be used, a single field or multiple fields from the documents, as well as other valid expressions can be specified as identifier with <b>_id</b>. After that, you can use various accumulators for certain remaining fields to calculate aggregated values.</p>
 <p><b>$sort</b> takes all input documents and returns them in a stream of sorted documents. You just need to provide sort criteria. If different types of data happens to be in one field, MongoDB will use predefined comparison order to sort them.</p>
-<p>Check out the code below, the <b>Result</b> tab contains result arranged in a table which is the realtime query result from the 500-file collection.</p>
+<p>Check out the code(database operation part) below, the <b>Result</b> tab contains result arranged in a table which is the realtime query result from the 500-file collection.</p>
 <tabset>
 <tab heading="Code">
   <pre class="prettyprint lang-js">
@@ -144,7 +150,7 @@
 <br/>
 <p>For the second part, we will use one new operator called <b>$match</b> to analyze data only from Uganda.</p>
 <p><b>$match</b> filters the document stream, and only allows matching documents to pass into the next pipeline stage. Basically, the <b>$match</b> query syntax is identical to the read operation query syntax in MongoDB, what we will use here is in the simplest query, which specifies the filtering value of a single field. Thus, we will only allow documents with 'country' field equal to 'Uganda' to enter next stage.</p>
-<p>Check out the code below, the <b>Result</b> tab contains result arranged in a table which is the realtime query result from the 500-file collection.</p>
+<p>Check out the code(database operation part) below, the <b>Result</b> tab contains result arranged in a table which is the realtime query result from the 500-file collection.</p>
 <tabset>
 <tab heading="Code">
   <pre class="prettyprint lang-js">
@@ -195,12 +201,12 @@
 </div>
 <p>For this problem, we will use one new operator called <b>$project</b> to get a new field representing the year when each loan is posted.</p>
 <p><b>$project</b> reshapes a document stream by renaming, adding, or removing fields. It can also be used to create computed values or sub-documents. Here, we will use $year operator, which can convert a ISODate Object to corresponding year, to get the year in 'posted_date' field to a new 'post_year' field.</p>
-<p>Note that loans with status being 'deleted' or '' has a <b>null</b> 'posted_date' field in original json file, which results in a default ISODate object with value Jan 1st, 1970 in database, so we will filter out them using <b>$match</b> first</p>
-<p>Check out the code below, the <b>Result</b> tab contains result arranged in a table which is the realtime query result from the 500-file collection.</p>
+<p>Note that loans with status being 'deleted' or 'expired' has a <b>null</b> 'posted_date' field in original json file, which results in a default ISODate object with value Jan 1st, 1970 in database, so we will filter out them using <b>$match</b> first</p>
+<p>Check out the code(database operation part) below, the <b>Result</b> tab contains result arranged in a table which is the realtime query result from the 500-file collection.</p>
 <tabset>
 <tab heading="Code">
   <pre class="prettyprint lang-js">
-  //1)Filter the documents to get only valid documents, of which the 'posted_date' field is not null
+  //1)Filter the documents to get only valid documents, of which the 'posted_date' field is not null, $gt is a comparison operator which denotes 'greater than'
   //2)Project the year value of 'posted_date' field to a new field called 'post_year', also include fields that will be used in next pipeline stage, namely 'borrower_count' and 'lender_count'. '_id' field which is MongoDB generated identifier for document is excluded here.
   //3)Group documents by projected 'post_year' field by providing $post_year as _id. avg_borrower and avg_lender are the result of average accumulator on 'borrower_count' and 'lender_count' fields.
   //4)Sort by post year in ascending order
@@ -243,16 +249,31 @@
   </div>
 </tab>
 </tabset>
+</section>
 <br/>
+<section id="step4" scrollspyBroadcast>
 <h3>Step <span class="label label-primary">4</span> Try out</h3>
 <p>Try out what you have learned on some exercises! This time you should use the full dataset, namely all of the 1335 json files</p>
 <div class="well well-sm">
   <p><b>Exercise 1</b>: Country distribution for all loans and for loans in one specified sector</p>
-  <p>The goal is to find out how many loans are there in each country in general and how much the total and average loan amount is in each country. We can also focus on one specifed sector to get the country distribution, use <b>Construction</b> Sector in this exercise.</p>
+  <p>The goal is to find out how many loans are there in each country in general and how much the total and average loan amount is in each country. We can also focus on one specifed sector to get the country distribution, use <b>Construction</b> sector in this exercise. The fields in the result should be country, loan count, total loan amount and average loan amount.</p>
 </div>
 <div class="well well-sm">
   <p><b>Exercise 2</b>: Current paid percentage of loans for loans posted in each year starting from 2011</p>
-  <p>The goal is to find out what percentage of loans are in 'paid' status now for loans posted in each year starting from 2011.</p>
+  <p>The goal is to find out what percentage of loans are in 'paid' status now for loans posted in each year starting from 2011. The fields in the result should be year and percentage of loans with 'paid' status.</p>
   <p><b>Hint:</b> All of the four pipeline operators mentioned in step 3 are needed in this exercise. Also, take a look at <b>$cond</b> and <b>$divide</b>, two <a href="http://docs.mongodb.org/manual/reference/operator/aggregation/#aggregation-expression-operators">expression operators</a>, which may help you solve this one.</p>
 </div>
+</section>
 <br/>
+<br/>
+</div>
+<div class="col-md-3">
+  <div class="bs-docs-sidebar hidden-print affix" style="top:80px" role="complementary">
+    <ul class="nav bs-docs-sidenav">
+      <li scrollspyListen="step1"><a href="" ng-click="scrollTo('step1')">Create MongoDB database and connect to it</a></li>
+      <li scrollspyListen="step2"><a href="" ng-click="scrollTo('step2')">Import data</a></li>
+      <li scrollspyListen="step3"><a href="" ng-click="scrollTo('step3')">Analyze the data</a></li>
+      <li scrollspyListen="step4"><a href="" ng-click="scrollTo('step4')">Try out</a></li>
+    </ul>
+  </div>
+</div>
